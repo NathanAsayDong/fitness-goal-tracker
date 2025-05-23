@@ -11,6 +11,7 @@ export const UserProvider = ({ children }) => {
   const [users, setUsers] = useState([])
   const [goals, setGoals] = useState([])
   const [events, setEvents] = useState([])
+  const [teams, setTeams] = useState([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
   const [isClient, setIsClient] = useState(false)
@@ -30,14 +31,16 @@ export const UserProvider = ({ children }) => {
     setLoading(true)
     setError(null)
     try {
-      const [usersData, goalsData, eventsData] = await Promise.all([
+      const [usersData, goalsData, eventsData, teamsData] = await Promise.all([
         apiService.users.getAllUsers(),
         apiService.goals.getAllGoals(),
         apiService.events.getAllEvents(),
+        apiService.teams.getAllTeams(),
       ])
       setUsers(usersData)
       setGoals(goalsData)
       setEvents(eventsData)
+      setTeams(teamsData)
     } catch (err) {
       setError(err.message)
       console.error('Failed to load initial data:', err)
@@ -91,6 +94,8 @@ export const UserProvider = ({ children }) => {
       // Also remove user's goals and events
       setGoals(prev => prev.filter(goal => goal.userId !== userId))
       setEvents(prev => prev.filter(event => event.userId !== userId))
+      // Also remove teams that include this user
+      setTeams(prev => prev.filter(team => team.userIdOne !== userId && team.userIdTwo !== userId))
     } catch (err) {
       setError(err.message)
       throw err
@@ -206,12 +211,65 @@ export const UserProvider = ({ children }) => {
     }
   }
 
+  // Team operations
+  const addTeam = async (teamData) => {
+    setLoading(true)
+    setError(null)
+    try {
+      const newTeam = await apiService.teams.createTeam(teamData)
+      setTeams(prev => [...prev, newTeam])
+      return newTeam.id
+    } catch (err) {
+      setError(err.message)
+      throw err
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  const updateTeam = async (teamId, teamData) => {
+    setLoading(true)
+    setError(null)
+    try {
+      const updatedTeam = await apiService.teams.updateTeam(teamId, teamData)
+      setTeams(prev => prev.map(team => team.id === teamId ? updatedTeam : team))
+      return updatedTeam
+    } catch (err) {
+      setError(err.message)
+      throw err
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  const deleteTeam = async (teamId) => {
+    setLoading(true)
+    setError(null)
+    try {
+      await apiService.teams.deleteTeam(teamId)
+      setTeams(prev => prev.filter(team => team.id !== teamId))
+    } catch (err) {
+      setError(err.message)
+      throw err
+    } finally {
+      setLoading(false)
+    }
+  }
+
   // Helper functions to get related data
   const getUserGoals = (userId) => goals.filter(goal => goal.userId === userId)
   
   const getUserEvents = (userId) => events.filter(event => event.userId === userId)
   
   const getGoalEvents = (goalId) => events.filter(event => event.goalId === goalId)
+
+  const getUserTeams = (userId) => teams.filter(team => team.userIdOne === userId || team.userIdTwo === userId)
+
+  const getTeamMembers = (teamId) => {
+    const team = teams.find(t => t.id === teamId)
+    if (!team) return []
+    return users.filter(user => user.id === team.userIdOne || user.id === team.userIdTwo)
+  }
 
   const getUserProgress = (userId) => {
     const userGoals = getUserGoals(userId)
@@ -227,6 +285,7 @@ export const UserProvider = ({ children }) => {
         users,
         goals,
         events,
+        teams,
         loading,
         error,
         isClient,
@@ -247,10 +306,17 @@ export const UserProvider = ({ children }) => {
         updateEvent,
         deleteEvent,
         
+        // Team operations
+        addTeam,
+        updateTeam,
+        deleteTeam,
+        
         // Helper functions
         getUserGoals,
         getUserEvents,
         getGoalEvents,
+        getUserTeams,
+        getTeamMembers,
         getUserProgress,
         
         // Utility

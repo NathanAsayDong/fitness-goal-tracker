@@ -1,4 +1,4 @@
-import { Event, EventClass, Goal, GoalClass, User, UserClass } from './classes.def';
+import { Event, EventClass, Goal, GoalClass, Team, TeamClass, User, UserClass } from './classes.def';
 
 // Configuration
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
@@ -165,11 +165,53 @@ export const eventAPI = {
   },
 };
 
+// Team API Service
+export const teamAPI = {
+  // Create team
+  createTeam: async (teamData: Omit<Team, 'id' | 'createdAt'>): Promise<Team> => {
+    return apiRequest<Team>('/teams/', {
+      method: 'POST',
+      body: JSON.stringify(teamData),
+    });
+  },
+
+  // Get all teams
+  getAllTeams: async (): Promise<Team[]> => {
+    return apiRequest<Team[]>('/teams/');
+  },
+
+  // Get specific team
+  getTeam: async (teamId: string): Promise<Team> => {
+    return apiRequest<Team>(`/teams/${teamId}`);
+  },
+
+  // Get user's teams
+  getUserTeams: async (userId: string): Promise<Team[]> => {
+    return apiRequest<Team[]>(`/teams/user/${userId}`);
+  },
+
+  // Update team
+  updateTeam: async (teamId: string, teamData: Partial<Team>): Promise<Team> => {
+    return apiRequest<Team>(`/teams/${teamId}`, {
+      method: 'PUT',
+      body: JSON.stringify(teamData),
+    });
+  },
+
+  // Delete team
+  deleteTeam: async (teamId: string): Promise<void> => {
+    return apiRequest<void>(`/teams/${teamId}`, {
+      method: 'DELETE',
+    });
+  },
+};
+
 // Combined API service
 export const apiService = {
   users: userAPI,
   goals: goalAPI,
   events: eventAPI,
+  teams: teamAPI,
 };
 
 // Error handling utilities
@@ -210,6 +252,14 @@ export const createEvent = (
   dateTime?: string
 ): EventClass => {
   return new EventClass(userId, goalId, note, dateTime);
+};
+
+export const createTeam = (
+  userIdOne: string,
+  userIdTwo: string,
+  teamName: string
+): TeamClass => {
+  return new TeamClass(userIdOne, userIdTwo, teamName);
 };
 
 export default apiService;
