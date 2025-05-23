@@ -1,28 +1,39 @@
 "use client"
 
-import { useUserContext } from "../contexts/UserContext"
-import { Link } from "react-router-dom"
+import Link from "next/link"
 import { useState } from "react"
+import { useUserContext } from "../contexts/UserContext"
 import AddUserForm from "./AddUserForm"
 
 const Leaderboard = () => {
-  const { users } = useUserContext()
+  const { users, getUserProgress, loading, error } = useUserContext()
   const [showAddUser, setShowAddUser] = useState(false)
 
-  // Calculate total progress percentage for each user
+  // Calculate progress for each user and sort
   const usersWithProgress = users
-    .map((user) => {
-      const categories = ["eating", "fitness", "emotional", "spiritual"]
-      const totalCount = categories.reduce((sum, cat) => sum + user.goals[cat].count, 0)
-      const totalTarget = categories.reduce((sum, cat) => sum + user.goals[cat].target, 0)
-      const progressPercent = totalTarget > 0 ? Math.round((totalCount / totalTarget) * 100) : 0
-
-      return {
-        ...user,
-        progressPercent,
-      }
-    })
+    .map((user) => ({
+      ...user,
+      progressPercent: getUserProgress(user.id),
+    }))
     .sort((a, b) => b.progressPercent - a.progressPercent)
+
+  if (loading) {
+    return (
+      <div className="flex justify-center items-center py-10">
+        <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-blue-600"></div>
+      </div>
+    )
+  }
+
+  if (error) {
+    return (
+      <div className="text-center py-10">
+        <div className="p-4 bg-red-100 border border-red-400 text-red-700 rounded">
+          Error loading data: {error}
+        </div>
+      </div>
+    )
+  }
 
   return (
     <div className="space-y-6">
@@ -68,14 +79,17 @@ const Leaderboard = () => {
                   <td className="px-6 py-4 whitespace-nowrap">
                     <div className="flex items-center">
                       <div className="h-10 w-10 flex-shrink-0">
-                        <img
-                          className="h-10 w-10 rounded-full"
-                          src={user.avatar || "/placeholder.svg"}
-                          alt={user.name}
-                        />
+                        <div className="h-10 w-10 rounded-full bg-blue-500 flex items-center justify-center text-white font-semibold">
+                          {user.firstName.charAt(0)}{user.lastName.charAt(0)}
+                        </div>
                       </div>
                       <div className="ml-4">
-                        <div className="text-sm font-medium text-gray-900">{user.name}</div>
+                        <div className="text-sm font-medium text-gray-900">
+                          {user.firstName} {user.lastName}
+                        </div>
+                        <div className="text-sm text-gray-500">
+                          {user.gamerTag && `@${user.gamerTag}`}
+                        </div>
                       </div>
                     </div>
                   </td>
@@ -89,7 +103,7 @@ const Leaderboard = () => {
                     <div className="text-xs text-gray-500 mt-1">{user.progressPercent}% Complete</div>
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                    <Link to={`/profile/${user.id}`} className="text-blue-600 hover:text-blue-900">
+                    <Link href={`/profile/${user.id}`} className="text-blue-600 hover:text-blue-900">
                       View Profile
                     </Link>
                   </td>

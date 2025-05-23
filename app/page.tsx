@@ -1,5 +1,7 @@
-import App from "../src/App"
+"use client"
 
-export default function Page() {
-  return <App />
+import Leaderboard from "@/src/components/Leaderboard"
+
+export default function Home() {
+  return <Leaderboard />
 }

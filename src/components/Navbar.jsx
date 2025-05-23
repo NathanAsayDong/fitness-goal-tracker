@@ -1,6 +1,6 @@
 "use client"
 
-import { Link } from "react-router-dom"
+import Link from "next/link"
 import { Home, Plus } from "lucide-react"
 import { useState } from "react"
 import AddUserForm from "./AddUserForm"
@@ -13,13 +13,13 @@ const Navbar = () => {
       <div className="container mx-auto px-4">
         <div className="flex justify-between items-center h-16">
           <div className="flex items-center">
-            <Link to="/" className="flex items-center space-x-2">
+            <Link href="/" className="flex items-center space-x-2">
               <span className="font-bold text-xl">Goal Tracker</span>
             </Link>
           </div>
 
           <div className="flex items-center space-x-4">
-            <Link to="/" className="flex items-center space-x-1 text-gray-700 hover:text-blue-600">
+            <Link href="/" className="flex items-center space-x-1 text-gray-700 hover:text-blue-600">
               <Home size={20} />
               <span>Home</span>
             </Link>

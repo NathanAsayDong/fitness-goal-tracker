@@ -1,14 +1,19 @@
 "use client"
 
-import { useState } from "react"
+import { Check, Edit, X } from "lucide-react"
+import { useEffect, useState } from "react"
 import { useUserContext } from "../contexts/UserContext"
-import { Edit, Check, X } from "lucide-react"
 
 const GoalCard = ({ userId, category, title, icon, goal, color, progressColor }) => {
   const { incrementGoalCount, updateGoal, updateGoalTarget } = useUserContext()
   const [isEditing, setIsEditing] = useState(false)
   const [editedGoal, setEditedGoal] = useState(goal.description)
   const [editedTarget, setEditedTarget] = useState(goal.target)
+  const [today, setToday] = useState("")
+
+  useEffect(() => {
+    setToday(new Date().toISOString().split("T")[0])
+  }, [])
 
   const progressPercent = Math.min(100, Math.round((goal.count / goal.target) * 100))
 
@@ -27,9 +32,6 @@ const GoalCard = ({ userId, category, title, icon, goal, color, progressColor })
     setEditedTarget(goal.target)
     setIsEditing(false)
   }
-
-  // Check if goal was completed today
-  const today = new Date().toISOString().split("T")[0]
 
   return (
     <div className={`border rounded-lg p-5 ${color}`}>

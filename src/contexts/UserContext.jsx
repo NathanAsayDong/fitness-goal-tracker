@@ -1,141 +1,260 @@
 "use client"
 
-import { createContext, useState, useContext, useEffect } from "react"
+import { createContext, useContext, useEffect, useState } from "react"
+import { apiService } from "../shared/apiService"
 
 const UserContext = createContext()
 
 export const useUserContext = () => useContext(UserContext)
 
 export const UserProvider = ({ children }) => {
-  const [users, setUsers] = useState(() => {
-    const savedUsers = localStorage.getItem("fitnessAppUsers")
-    return savedUsers ? JSON.parse(savedUsers) : []
-  })
+  const [users, setUsers] = useState([])
+  const [goals, setGoals] = useState([])
+  const [events, setEvents] = useState([])
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState(null)
+  const [isClient, setIsClient] = useState(false)
 
   useEffect(() => {
-    localStorage.setItem("fitnessAppUsers", JSON.stringify(users))
-  }, [users])
+    setIsClient(true)
+  }, [])
 
-  const addUser = (newUser) => {
-    const userId = Date.now().toString()
-    setUsers([
-      ...users,
-      {
-        id: userId,
-        name: newUser.name,
-        avatar:
-          newUser.avatar || `https://ui-avatars.com/api/?name=${encodeURIComponent(newUser.name)}&background=random`,
-        goals: {
-          eating: { description: newUser.eatingGoal, count: 0, target: 7 },
-          fitness: { description: newUser.fitnessGoal, count: 0, target: 7 },
-          emotional: { description: newUser.emotionalGoal, count: 0, target: 7 },
-          spiritual: { description: newUser.spiritualGoal, count: 0, target: 7 },
-        },
-        history: [],
-      },
-    ])
-    return userId
+  // Load initial data
+  useEffect(() => {
+    if (isClient) {
+      loadInitialData()
+    }
+  }, [isClient])
+
+  const loadInitialData = async () => {
+    setLoading(true)
+    setError(null)
+    try {
+      const [usersData, goalsData, eventsData] = await Promise.all([
+        apiService.users.getAllUsers(),
+        apiService.goals.getAllGoals(),
+        apiService.events.getAllEvents(),
+      ])
+      setUsers(usersData)
+      setGoals(goalsData)
+      setEvents(eventsData)
+    } catch (err) {
+      setError(err.message)
+      console.error('Failed to load initial data:', err)
+    } finally {
+      setLoading(false)
+    }
   }
 
-  const updateGoal = (userId, category, goal) => {
-    setUsers(
-      users.map((user) => {
-        if (user.id === userId) {
-          return {
-            ...user,
-            goals: {
-              ...user.goals,
-              [category]: {
-                ...user.goals[category],
-                description: goal,
-              },
-            },
-          }
-        }
-        return user
-      }),
-    )
+  // User operations
+  const addUser = async (userData) => {
+    setLoading(true)
+    setError(null)
+    try {
+      const newUser = await apiService.users.createUser({
+        firstName: userData.firstName,
+        lastName: userData.lastName,
+        email: userData.email,
+        gamerTag: userData.gamerTag,
+      })
+      setUsers(prev => [...prev, newUser])
+      return newUser.id
+    } catch (err) {
+      setError(err.message)
+      throw err
+    } finally {
+      setLoading(false)
+    }
   }
 
-  const incrementGoalCount = (userId, category) => {
-    const today = new Date().toISOString().split("T")[0]
-
-    setUsers(
-      users.map((user) => {
-        if (user.id === userId) {
-          // Check if already incremented today
-          const alreadyIncremented = user.history.some((entry) => entry.date === today && entry.category === category)
-
-          if (alreadyIncremented) {
-            return user
-          }
-
-          return {
-            ...user,
-            goals: {
-              ...user.goals,
-              [category]: {
-                ...user.goals[category],
-                count: user.goals[category].count + 1,
-              },
-            },
-            history: [...user.history, { date: today, category, action: "increment" }],
-          }
-        }
-        return user
-      }),
-    )
+  const updateUser = async (userId, userData) => {
+    setLoading(true)
+    setError(null)
+    try {
+      const updatedUser = await apiService.users.updateUser(userId, userData)
+      setUsers(prev => prev.map(user => user.id === userId ? updatedUser : user))
+      return updatedUser
+    } catch (err) {
+      setError(err.message)
+      throw err
+    } finally {
+      setLoading(false)
+    }
   }
 
-  const resetGoalCount = (userId, category) => {
-    setUsers(
-      users.map((user) => {
-        if (user.id === userId) {
-          return {
-            ...user,
-            goals: {
-              ...user.goals,
-              [category]: {
-                ...user.goals[category],
-                count: 0,
-              },
-            },
-          }
-        }
-        return user
-      }),
-    )
+  const deleteUser = async (userId) => {
+    setLoading(true)
+    setError(null)
+    try {
+      await apiService.users.deleteUser(userId)
+      setUsers(prev => prev.filter(user => user.id !== userId))
+      // Also remove user's goals and events
+      setGoals(prev => prev.filter(goal => goal.userId !== userId))
+      setEvents(prev => prev.filter(event => event.userId !== userId))
+    } catch (err) {
+      setError(err.message)
+      throw err
+    } finally {
+      setLoading(false)
+    }
   }
 
-  const updateGoalTarget = (userId, category, target) => {
-    setUsers(
-      users.map((user) => {
-        if (user.id === userId) {
-          return {
-            ...user,
-            goals: {
-              ...user.goals,
-              [category]: {
-                ...user.goals[category],
-                target: Number.parseInt(target, 10),
-              },
-            },
-          }
-        }
-        return user
-      }),
-    )
+  // Goal operations
+  const addGoal = async (goalData) => {
+    setLoading(true)
+    setError(null)
+    try {
+      const newGoal = await apiService.goals.createGoal(goalData)
+      setGoals(prev => [...prev, newGoal])
+      return newGoal.id
+    } catch (err) {
+      setError(err.message)
+      throw err
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  const updateGoal = async (goalId, goalData) => {
+    setLoading(true)
+    setError(null)
+    try {
+      const updatedGoal = await apiService.goals.updateGoal(goalId, goalData)
+      setGoals(prev => prev.map(goal => goal.id === goalId ? updatedGoal : goal))
+      return updatedGoal
+    } catch (err) {
+      setError(err.message)
+      throw err
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  const deleteGoal = async (goalId) => {
+    setLoading(true)
+    setError(null)
+    try {
+      await apiService.goals.deleteGoal(goalId)
+      setGoals(prev => prev.filter(goal => goal.id !== goalId))
+      // Also remove goal's events
+      setEvents(prev => prev.filter(event => event.goalId !== goalId))
+    } catch (err) {
+      setError(err.message)
+      throw err
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  const completeGoal = async (goalId) => {
+    setLoading(true)
+    setError(null)
+    try {
+      const completedGoal = await apiService.goals.completeGoal(goalId)
+      setGoals(prev => prev.map(goal => goal.id === goalId ? completedGoal : goal))
+      return completedGoal
+    } catch (err) {
+      setError(err.message)
+      throw err
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  // Event operations
+  const addEvent = async (eventData) => {
+    setLoading(true)
+    setError(null)
+    try {
+      const newEvent = await apiService.events.createEvent(eventData)
+      setEvents(prev => [...prev, newEvent])
+      return newEvent.id
+    } catch (err) {
+      setError(err.message)
+      throw err
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  const updateEvent = async (eventId, eventData) => {
+    setLoading(true)
+    setError(null)
+    try {
+      const updatedEvent = await apiService.events.updateEvent(eventId, eventData)
+      setEvents(prev => prev.map(event => event.id === eventId ? updatedEvent : event))
+      return updatedEvent
+    } catch (err) {
+      setError(err.message)
+      throw err
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  const deleteEvent = async (eventId) => {
+    setLoading(true)
+    setError(null)
+    try {
+      await apiService.events.deleteEvent(eventId)
+      setEvents(prev => prev.filter(event => event.id !== eventId))
+    } catch (err) {
+      setError(err.message)
+      throw err
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  // Helper functions to get related data
+  const getUserGoals = (userId) => goals.filter(goal => goal.userId === userId)
+  
+  const getUserEvents = (userId) => events.filter(event => event.userId === userId)
+  
+  const getGoalEvents = (goalId) => events.filter(event => event.goalId === goalId)
+
+  const getUserProgress = (userId) => {
+    const userGoals = getUserGoals(userId)
+    const completedGoals = userGoals.filter(goal => goal.isCompleted).length
+    const totalGoals = userGoals.length
+    return totalGoals > 0 ? Math.round((completedGoals / totalGoals) * 100) : 0
   }
 
   return (
     <UserContext.Provider
       value={{
+        // State
         users,
+        goals,
+        events,
+        loading,
+        error,
+        isClient,
+        
+        // User operations
         addUser,
+        updateUser,
+        deleteUser,
+        
+        // Goal operations
+        addGoal,
         updateGoal,
-        incrementGoalCount,
-        resetGoalCount,
-        updateGoalTarget,
+        deleteGoal,
+        completeGoal,
+        
+        // Event operations
+        addEvent,
+        updateEvent,
+        deleteEvent,
+        
+        // Helper functions
+        getUserGoals,
+        getUserEvents,
+        getGoalEvents,
+        getUserProgress,
+        
+        // Utility
+        loadInitialData,
       }}
     >
       {children}
