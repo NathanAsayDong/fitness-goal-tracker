@@ -282,7 +282,7 @@ const ProfileView = () => {
     { value: "diet", label: "Diet", emoji: "🥗", color: "bg-green-100 border-green-300" },
     { value: "exercise", label: "Exercise", emoji: "💪", color: "bg-blue-100 border-blue-300" },
     { value: "emotional", label: "Emotional", emoji: "😌", color: "bg-purple-100 border-purple-300" },
-    { value: "spiritual", label: "Spiritual", emoji: "🧘", color: "bg-yellow-100 border-yellow-300" }
+    { value: "personal", label: "Personal", emoji: "🧘", color: "bg-yellow-100 border-yellow-300" }
   ]
 
   const getGoalTypeStyle = (goalType) => {
@@ -432,7 +432,7 @@ const ProfileView = () => {
                           : 'bg-green-600 text-white hover:bg-green-700 cursor-pointer'
                       }`}
                     >
-                      {hasCompletedToday ? '✓ Completed Today' : 'Mark Complete'}
+                      {hasCompletedToday ? '✓ Completed Today' : 'Log Today'}
                     </button>
                   </div>
                 </div>
