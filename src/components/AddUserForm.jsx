@@ -33,13 +33,13 @@ const AddUserForm = ({ onClose }) => {
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
       {error && (
-        <div className="p-3 bg-red-100 border border-red-400 text-red-700 rounded">
+        <div className="p-3 bg-red-100 border border-red-400 text-red-700 rounded-lg text-sm">
           {error}
         </div>
       )}
 
       <div>
-        <label htmlFor="firstName" className="block text-sm font-medium text-gray-700">
+        <label htmlFor="firstName" className="block text-sm font-medium text-gray-700 mb-2">
           First Name *
         </label>
         <input
@@ -49,12 +49,14 @@ const AddUserForm = ({ onClose }) => {
           required
           value={formData.firstName}
           onChange={handleChange}
-          className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm"
+          className="w-full px-4 py-4 border-2 border-gray-300 rounded-xl shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-base"
+          placeholder="Enter first name"
+          disabled={loading}
         />
       </div>
 
       <div>
-        <label htmlFor="lastName" className="block text-sm font-medium text-gray-700">
+        <label htmlFor="lastName" className="block text-sm font-medium text-gray-700 mb-2">
           Last Name *
         </label>
         <input
@@ -64,12 +66,14 @@ const AddUserForm = ({ onClose }) => {
           required
           value={formData.lastName}
           onChange={handleChange}
-          className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm"
+          className="w-full px-4 py-4 border-2 border-gray-300 rounded-xl shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-base"
+          placeholder="Enter last name"
+          disabled={loading}
         />
       </div>
 
       <div>
-        <label htmlFor="email" className="block text-sm font-medium text-gray-700">
+        <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-2">
           Email *
         </label>
         <input
@@ -79,12 +83,14 @@ const AddUserForm = ({ onClose }) => {
           required
           value={formData.email}
           onChange={handleChange}
-          className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm"
+          className="w-full px-4 py-4 border-2 border-gray-300 rounded-xl shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-base"
+          placeholder="Enter email address"
+          disabled={loading}
         />
       </div>
 
       <div>
-        <label htmlFor="gamerTag" className="block text-sm font-medium text-gray-700">
+        <label htmlFor="gamerTag" className="block text-sm font-medium text-gray-700 mb-2">
           Gamer Tag (optional)
         </label>
         <input
@@ -93,24 +99,27 @@ const AddUserForm = ({ onClose }) => {
           name="gamerTag"
           value={formData.gamerTag}
           onChange={handleChange}
-          className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm"
+          className="w-full px-4 py-4 border-2 border-gray-300 rounded-xl shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-base"
+          placeholder="Enter gamer tag"
+          disabled={loading}
         />
       </div>
 
-      <div className="flex justify-end space-x-3">
-        <button
-          type="button"
-          onClick={onClose}
-          className="px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
-        >
-          Cancel
-        </button>
+      <div className="flex flex-col sm:flex-row gap-3 pt-4">
         <button
           type="submit"
           disabled={loading}
-          className="px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50"
+          className="w-full sm:flex-1 px-4 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed font-medium text-base"
         >
           {loading ? 'Creating...' : 'Create User'}
+        </button>
+        <button
+          type="button"
+          onClick={onClose}
+          disabled={loading}
+          className="w-full sm:w-auto px-4 py-3 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed font-medium text-base"
+        >
+          Cancel
         </button>
       </div>
     </form>

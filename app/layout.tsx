@@ -3,9 +3,18 @@ import type { Metadata } from 'next'
 import './globals.css'
 
 export const metadata: Metadata = {
-  title: "Fitness Goal Tracker",
-  description: "Track and share your fitness goals",
+  title: "Family Feud",
+  description: "Track and share your fitness goals with family and team members.",
   generator: 'v0.dev',
+  icons: {
+    icon: [
+      { url: '/apple-touch-icon.png', sizes: '1024x1024', type: 'image/png' },
+      { url: '/favicon.ico', sizes: 'any' }
+    ],
+    apple: [
+      { url: '/apple-touch-icon.png', sizes: '1024x1024', type: 'image/png' }
+    ]
+  }
 }
 
 export default function RootLayout({
@@ -15,6 +24,14 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
+      <head>
+        <link rel="icon" href="/apple-touch-icon.png" sizes="1024x1024" type="image/png" />
+        <link rel="icon" href="/favicon.ico" />
+        <link rel="apple-touch-icon" sizes="1024x1024" href="/apple-touch-icon.png" />
+        <meta name="apple-mobile-web-app-capable" content="yes" />
+        <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+        <meta name="apple-mobile-web-app-title" content="Family Feud" />
+      </head>
       <body>
         <ClientWrapper>
           {children}

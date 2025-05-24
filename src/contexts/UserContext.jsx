@@ -2,6 +2,7 @@
 
 import { createContext, useContext, useEffect, useState } from "react"
 import { apiService } from "../shared/apiService"
+import { calculationService } from "../shared/calculateScores.service"
 
 const UserContext = createContext()
 
@@ -109,12 +110,35 @@ export const UserProvider = ({ children }) => {
     setLoading(true)
     setError(null)
     try {
+      // Check if user already has a goal of this type
+      const existingGoal = goals.find(goal => 
+        goal.userId === goalData.userId && 
+        goal.goalType === goalData.goalType
+      )
+      
+      if (existingGoal) {
+        setLoading(false)
+        return {
+          success: false,
+          message: `You already have a ${goalData.goalType} goal set up`,
+          type: 'duplicate'
+        }
+      }
+
       const newGoal = await apiService.goals.createGoal(goalData)
       setGoals(prev => [...prev, newGoal])
-      return newGoal.id
+      return {
+        success: true,
+        goalId: newGoal.id,
+        message: 'Goal created successfully!'
+      }
     } catch (err) {
       setError(err.message)
-      throw err
+      return {
+        success: false,
+        message: err.message,
+        type: 'error'
+      }
     } finally {
       setLoading(false)
     }
@@ -171,6 +195,11 @@ export const UserProvider = ({ children }) => {
     setLoading(true)
     setError(null)
     try {
+      // Check if user can log an event for this goal today
+      if (!canLogEventForGoal(eventData.userId, eventData.goalId)) {
+        throw new Error('You have already completed this goal today')
+      }
+
       const newEvent = await apiService.events.createEvent(eventData)
       setEvents(prev => [...prev, newEvent])
       return newEvent.id
@@ -278,6 +307,51 @@ export const UserProvider = ({ children }) => {
     return totalGoals > 0 ? Math.round((completedGoals / totalGoals) * 100) : 0
   }
 
+  const getUserScore = (userId) => {
+    const userEvents = getUserEvents(userId)
+    const userGoals = getUserGoals(userId)
+    const user = users.find(u => u.id === userId)
+    if (!user) return 0
+    return calculationService.calculateUserScore(user, userGoals, userEvents)
+  }
+
+  const getTeamScore = (teamId) => {
+    const team = teams.find(t => t.id === teamId)
+    if (!team) return 0
+    
+    const teamEvents = events.filter(event => 
+      event.userId === team.userIdOne || event.userId === team.userIdTwo
+    )
+    return calculationService.calculateTeamScore(team, goals, teamEvents)
+  }
+
+  const canLogEventForGoal = (userId, goalId) => {
+    // Get today's date in local timezone
+    const today = new Date()
+    const todayString = today.getFullYear() + '-' + 
+                       String(today.getMonth() + 1).padStart(2, '0') + '-' + 
+                       String(today.getDate()).padStart(2, '0')
+    
+    const todaysEvents = events.filter(event => {
+      if (event.userId !== userId || event.goalId !== goalId) {
+        return false
+      }
+      
+      // Parse the event date and get its date part
+      const eventDate = new Date(event.dateTime)
+      const eventDateString = eventDate.getFullYear() + '-' + 
+                             String(eventDate.getMonth() + 1).padStart(2, '0') + '-' + 
+                             String(eventDate.getDate()).padStart(2, '0')
+      
+      return eventDateString === todayString
+    })
+    
+    // Debug logging
+    console.log(`canLogEventForGoal: userId=${userId}, goalId=${goalId}, today=${todayString}, todaysEvents=${todaysEvents.length}`)
+    
+    return todaysEvents.length === 0
+  }
+
   return (
     <UserContext.Provider
       value={{
@@ -318,6 +392,9 @@ export const UserProvider = ({ children }) => {
         getUserTeams,
         getTeamMembers,
         getUserProgress,
+        getUserScore,
+        getTeamScore,
+        canLogEventForGoal,
         
         // Utility
         loadInitialData,
