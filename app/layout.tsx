@@ -3,8 +3,8 @@ import type { Metadata } from 'next'
 import './globals.css'
 
 export const metadata: Metadata = {
-  title: "Family Feud",
-  description: "Track and share your fitness goals with family and team members.",
+  title: "Jacked June",
+  description: "Compete in the ultimate wellness showdown in June.",
   generator: 'v0.dev',
   icons: {
     icon: [
@@ -30,7 +30,7 @@ export default function RootLayout({
         <link rel="apple-touch-icon" sizes="1024x1024" href="/apple-touch-icon.png" />
         <meta name="apple-mobile-web-app-capable" content="yes" />
         <meta name="apple-mobile-web-app-status-bar-style" content="default" />
-        <meta name="apple-mobile-web-app-title" content="Family Feud" />
+        <meta name="apple-mobile-web-app-title" content="Jacked June" />
       </head>
       <body>
         <ClientWrapper>
