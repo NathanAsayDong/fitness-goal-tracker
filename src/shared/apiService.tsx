@@ -68,6 +68,13 @@ export const userAPI = {
       method: 'DELETE',
     });
   },
+
+  // Generate user image
+  generateUserImage: async (userId: string): Promise<User> => {
+    return apiRequest<User>(`/images/generate-user-image/${userId}`, {
+      method: 'POST',
+    });
+  },
 };
 
 // Goal API Service

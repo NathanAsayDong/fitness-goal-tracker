@@ -105,6 +105,29 @@ export const UserProvider = ({ children }) => {
     }
   }
 
+  const generateUserImage = async (userId) => {
+    setLoading(true)
+    setError(null)
+    try {
+      const updatedUser = await apiService.users.generateUserImage(userId)
+      setUsers(prev => prev.map(user => user.id === userId ? updatedUser : user))
+      return {
+        success: true,
+        message: 'Image generated successfully!',
+        imageUrl: updatedUser.imageUrl
+      }
+    } catch (err) {
+      setError(err.message)
+      return {
+        success: false,
+        message: err.message || 'Failed to generate image',
+        type: 'error'
+      }
+    } finally {
+      setLoading(false)
+    }
+  }
+
   // Goal operations
   const addGoal = async (goalData) => {
     setLoading(true)
@@ -368,6 +391,7 @@ export const UserProvider = ({ children }) => {
         addUser,
         updateUser,
         deleteUser,
+        generateUserImage,
         
         // Goal operations
         addGoal,

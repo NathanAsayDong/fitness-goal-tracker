@@ -198,8 +198,21 @@ const Leaderboard = () => {
                           {index < 3 && <Crown className={`ml-1 ${crownColor}`} size={20} />}
                         </div>
                         
-                        <div className="h-12 w-12 rounded-full bg-blue-500 flex items-center justify-center text-white font-semibold text-sm">
-                          {user.firstName.charAt(0)}{user.lastName.charAt(0)}
+                        <div className="h-12 w-12 rounded-full bg-blue-500 flex items-center justify-center text-white font-semibold text-sm overflow-hidden">
+                          {user.imageUrl ? (
+                            <img 
+                              src={user.imageUrl} 
+                              alt={`${user.firstName} ${user.lastName}`}
+                              className="h-full w-full object-cover rounded-full"
+                              onError={(e) => {
+                                e.target.style.display = 'none'
+                                e.target.nextSibling.style.display = 'flex'
+                              }}
+                            />
+                          ) : null}
+                          <div className={`h-full w-full flex items-center justify-center text-white font-semibold text-sm ${user.imageUrl ? 'hidden' : ''}`}>
+                            {user.firstName.charAt(0)}{user.lastName.charAt(0)}
+                          </div>
                         </div>
                         
                         <div className="flex-1 min-w-0">
@@ -323,8 +336,21 @@ const Leaderboard = () => {
                       <div className="space-y-2">
                         {userOne && (
                           <div className="flex items-center space-x-2">
-                            <div className="h-8 w-8 rounded-full bg-blue-500 flex items-center justify-center text-white text-xs font-semibold">
-                              {userOne.firstName.charAt(0)}{userOne.lastName.charAt(0)}
+                            <div className="h-8 w-8 rounded-full bg-blue-500 flex items-center justify-center text-white text-xs font-semibold overflow-hidden">
+                              {userOne.imageUrl ? (
+                                <img 
+                                  src={userOne.imageUrl} 
+                                  alt={`${userOne.firstName} ${userOne.lastName}`}
+                                  className="h-full w-full object-cover rounded-full"
+                                  onError={(e) => {
+                                    e.target.style.display = 'none'
+                                    e.target.nextSibling.style.display = 'flex'
+                                  }}
+                                />
+                              ) : null}
+                              <div className={`h-full w-full flex items-center justify-center text-white text-xs font-semibold ${userOne.imageUrl ? 'hidden' : ''}`}>
+                                {userOne.firstName.charAt(0)}{userOne.lastName.charAt(0)}
+                              </div>
                             </div>
                             <span className="text-sm text-gray-700 truncate">
                               {userOne.firstName} {userOne.lastName}
@@ -333,8 +359,21 @@ const Leaderboard = () => {
                         )}
                         {userTwo && (
                           <div className="flex items-center space-x-2">
-                            <div className="h-8 w-8 rounded-full bg-green-500 flex items-center justify-center text-white text-xs font-semibold">
-                              {userTwo.firstName.charAt(0)}{userTwo.lastName.charAt(0)}
+                            <div className="h-8 w-8 rounded-full bg-green-500 flex items-center justify-center text-white text-xs font-semibold overflow-hidden">
+                              {userTwo.imageUrl ? (
+                                <img 
+                                  src={userTwo.imageUrl} 
+                                  alt={`${userTwo.firstName} ${userTwo.lastName}`}
+                                  className="h-full w-full object-cover rounded-full"
+                                  onError={(e) => {
+                                    e.target.style.display = 'none'
+                                    e.target.nextSibling.style.display = 'flex'
+                                  }}
+                                />
+                              ) : null}
+                              <div className={`h-full w-full flex items-center justify-center text-white text-xs font-semibold ${userTwo.imageUrl ? 'hidden' : ''}`}>
+                                {userTwo.firstName.charAt(0)}{userTwo.lastName.charAt(0)}
+                              </div>
                             </div>
                             <span className="text-sm text-gray-700 truncate">
                               {userTwo.firstName} {userTwo.lastName}

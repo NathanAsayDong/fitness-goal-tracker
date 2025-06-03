@@ -1,6 +1,6 @@
 "use client"
 
-import { AlertTriangle, Check, CheckCircle, Clock, Edit3, Plus, Target, Users, XCircle } from "lucide-react"
+import { AlertTriangle, Check, CheckCircle, Clock, Edit3, ImageIcon, Plus, Target, Users, XCircle } from "lucide-react"
 import Link from "next/link"
 import { useParams } from "next/navigation"
 import { useState } from "react"
@@ -18,6 +18,7 @@ const ProfileView = () => {
     updateGoal,
     addEvent,
     canLogEventForGoal,
+    generateUserImage,
     loading,
     error 
   } = useUserContext()
@@ -29,6 +30,7 @@ const ProfileView = () => {
   const [selectedGoalId, setSelectedGoalId] = useState("")
   const [editingGoalId, setEditingGoalId] = useState("")
   const [eventNote, setEventNote] = useState("")
+  const [generatingImage, setGeneratingImage] = useState(false)
   
   // Snackbar state
   const [snackbar, setSnackbar] = useState({
@@ -215,7 +217,6 @@ const ProfileView = () => {
   const handleMarkComplete = (goalId) => {
     // Check if goal can be logged for today
     if (!canLogEventForGoal(userId, goalId)) {
-      console.log('Goal already completed today')
       return
     }
     setSelectedGoalId(goalId)
@@ -278,6 +279,28 @@ const ProfileView = () => {
     }
   }
 
+  const handleGenerateImage = async () => {
+    if (!user || !user.gamerTag) {
+      showSnackbar('User must have a gamerTag to generate an image', 'warning')
+      return
+    }
+    
+    setGeneratingImage(true)
+    try {
+      const result = await generateUserImage(userId)
+      if (result.success) {
+        showSnackbar(result.message, 'success')
+      } else {
+        showSnackbar(result.message, result.type || 'error')
+      }
+    } catch (err) {
+      console.error('Failed to generate image:', err)
+      showSnackbar('Failed to generate image. Please try again later.', 'error')
+    } finally {
+      setGeneratingImage(false)
+    }
+  }
+
   const goalTypeOptions = [
     { value: "diet", label: "Diet", emoji: "🥗", color: "bg-green-100 border-green-300" },
     { value: "exercise", label: "Exercise", emoji: "💪", color: "bg-blue-100 border-blue-300" },
@@ -302,6 +325,15 @@ const ProfileView = () => {
             >
               <Users size={16} className="mr-1" />
               Switch User
+            </button>
+            <button
+              onClick={handleGenerateImage}
+              disabled={generatingImage || !user?.gamerTag}
+              className="flex items-center px-3 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition text-sm disabled:opacity-50 disabled:cursor-not-allowed"
+              title={!user?.gamerTag ? "User must have a gamerTag to generate an image" : "Generate AI avatar"}
+            >
+              <ImageIcon size={16} className="mr-1" />
+              {generatingImage ? 'Generating...' : 'Generate Image'}
             </button>
             <button
               onClick={() => setShowAddGoal(true)}
@@ -345,8 +377,21 @@ const ProfileView = () => {
       {/* User Profile Card */}
       <div className="mx-4 bg-gradient-to-r from-blue-500 to-purple-600 text-white p-6 rounded-xl shadow-lg">
         <div className="flex items-center space-x-4">
-          <div className="h-16 w-16 rounded-full bg-white bg-opacity-20 flex items-center justify-center text-2xl font-bold">
-            {user.firstName.charAt(0)}{user.lastName.charAt(0)}
+          <div className="h-16 w-16 rounded-full bg-white bg-opacity-20 flex items-center justify-center text-2xl font-bold overflow-hidden">
+            {user.imageUrl ? (
+              <img 
+                src={user.imageUrl} 
+                alt={`${user.firstName} ${user.lastName}`}
+                className="h-full w-full object-cover rounded-full"
+                onError={(e) => {
+                  e.target.style.display = 'none'
+                  e.target.nextSibling.style.display = 'flex'
+                }}
+              />
+            ) : null}
+            <div className={`h-full w-full flex items-center justify-center text-2xl font-bold ${user.imageUrl ? 'hidden' : ''}`}>
+              {user.firstName.charAt(0)}{user.lastName.charAt(0)}
+            </div>
           </div>
           <div className="flex-1">
             <h1 className="text-xl font-bold">{user.firstName} {user.lastName}</h1>
@@ -716,7 +761,19 @@ const ProfileView = () => {
                       <div className={`h-12 w-12 rounded-full flex items-center justify-center text-white font-semibold ${
                         userOption.id === userId ? 'bg-blue-600' : 'bg-blue-500'
                       }`}>
-                        {userOption.firstName.charAt(0)}{userOption.lastName.charAt(0)}
+                        {userOption.imageUrl ? (
+                          <img 
+                            src={userOption.imageUrl} 
+                            alt={`${userOption.firstName} ${userOption.lastName}`}
+                            className="h-full w-full object-cover rounded-full"
+                            onError={(e) => {
+                              e.target.style.display = 'none'
+                              e.target.nextSibling.style.display = 'flex'
+                            }}
+                          />
+                        ) : (
+                          userOption.firstName.charAt(0) + userOption.lastName.charAt(0)
+                        )}
                       </div>
                       <div>
                         <h3 className="font-semibold text-gray-900">
