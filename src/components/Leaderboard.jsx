@@ -91,7 +91,7 @@ const Leaderboard = () => {
   return (
     <div className="space-y-4 pb-6">
       {/* Header */}
-      <div className="sticky top-0 bg-white shadow-sm border-b z-10">
+      <div className="sticky top-0 bg-white shadow-sm border-b z-50">
         <div className="p-4">
           <h1 className="text-xl sm:text-2xl font-bold text-center mb-4">
             🏆 Leaderboard
