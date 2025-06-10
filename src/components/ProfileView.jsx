@@ -321,8 +321,7 @@ const ProfileView = () => {
         showSnackbar(result.message, result.type || 'error')
       }
     } catch (err) {
-      console.error('Failed to generate image:', err)
-      showSnackbar('Failed to generate image. Please try again later.', 'error')
+      window.location.reload()
     } finally {
       setGeneratingImage(false)
     }

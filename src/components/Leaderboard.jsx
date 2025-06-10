@@ -215,7 +215,7 @@ const Leaderboard = () => {
                   )}
                   
                   {/* Content overlay */}
-                  <div className="relative z-10 p-4 bg-white bg-opacity-90 rounded-lg">
+                  <div className="relative z-10 p-4">
                     <div className="flex items-center justify-between">
                       {/* Rank and Avatar */}
                       <div className="flex items-center space-x-3">
@@ -358,7 +358,7 @@ const Leaderboard = () => {
                     )}
                     
                     {/* Content overlay */}
-                    <div className="relative z-10 p-4 bg-white bg-opacity-90 rounded-lg">
+                    <div className="relative z-10 p-4">
                       <div className="flex items-center justify-between mb-3">
                         {/* Rank and Team Name */}
                         <div className="flex items-center space-x-3">
