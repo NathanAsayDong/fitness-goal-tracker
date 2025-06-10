@@ -6,6 +6,7 @@ export interface User {
   gamerTag?: string;
   createdAt: string;
   imageUrl?: string;
+  bannerImageUrl?: string;
 }
 
 export interface Goal {
@@ -32,6 +33,21 @@ export interface Team {
     userIdOne: string;
     userIdTwo: string;
     teamName: string;
+    createdAt: string;
+}
+
+export interface UserBonus {
+  userId: string;
+  bonusId: string;
+  amount: number;
+}
+
+export interface Bonus {
+  id: string;
+  name: string;
+  description: string;
+  isActive: boolean;
+  max: number;
 }
 
 // Class implementations for creating new instances
@@ -42,6 +58,8 @@ export class UserClass implements User {
   email: string;
   gamerTag?: string;
   createdAt: string;
+  imageUrl?: string;
+  bannerImageUrl?: string;
 
   constructor(
     firstName: string,
@@ -49,7 +67,9 @@ export class UserClass implements User {
     email: string,
     gamerTag?: string,
     id?: string,
-    createdAt?: string
+    createdAt?: string,
+    imageUrl?: string,
+    bannerImageUrl?: string
   ) {
     this.id = id || `user_${Date.now()}_${Math.floor(Math.random() * 1000000)}`;
     this.firstName = firstName;
@@ -57,6 +77,8 @@ export class UserClass implements User {
     this.email = email;
     this.gamerTag = gamerTag;
     this.createdAt = createdAt || new Date().toISOString();
+    this.imageUrl = imageUrl;
+    this.bannerImageUrl = bannerImageUrl;
   }
 
   get fullName(): string {
@@ -135,3 +157,37 @@ export class TeamClass implements Team {
     this.createdAt = createdAt || new Date().toISOString();
   }
 }
+
+export class UserBonusClass implements UserBonus {
+  userId: string;
+  bonusId: string;
+  amount: number;
+
+  constructor(userId: string, bonusId: string, amount: number) {
+    this.userId = userId;
+    this.bonusId = bonusId;
+    this.amount = amount;
+
+  }
+}
+
+export class BonusClass implements Bonus {
+  id: string;
+  name: string;
+  description: string;
+  isActive: boolean;
+  max: number;
+
+  constructor(name: string, description: string, isActive: boolean, max: number) {
+    this.id = `bonus_${Date.now()}_${Math.floor(Math.random() * 1000000)}`;
+    this.name = name;
+    this.description = description;
+    this.isActive = isActive;
+    this.max = max;
+  }
+}
+
+
+
+
+    

@@ -13,35 +13,40 @@ export const UserProvider = ({ children }) => {
   const [goals, setGoals] = useState([])
   const [events, setEvents] = useState([])
   const [teams, setTeams] = useState([])
+  const [userBonusPoints, setUserBonusPoints] = useState([])
+  const [activeBonusOptions, setActiveBonusOptions] = useState([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
-  const [isClient, setIsClient] = useState(false)
 
+  // Load initial data only once when component mounts
   useEffect(() => {
-    setIsClient(true)
+    loadInitialData()
   }, [])
 
-  // Load initial data
-  useEffect(() => {
-    if (isClient) {
-      loadInitialData()
+  const loadInitialData = async (forceRefresh = false) => {
+    // Skip loading if we already have data and this isn't a forced refresh
+    if (!forceRefresh && users.length > 0) {
+      setLoading(false)
+      return
     }
-  }, [isClient])
-
-  const loadInitialData = async () => {
+    
     setLoading(true)
     setError(null)
     try {
-      const [usersData, goalsData, eventsData, teamsData] = await Promise.all([
+      const [usersData, goalsData, eventsData, teamsData, bonusPointsData, bonusOptionsData] = await Promise.all([
         apiService.users.getAllUsers(),
         apiService.goals.getAllGoals(),
         apiService.events.getAllEvents(),
         apiService.teams.getAllTeams(),
+        apiService.bonus.getAllBonusPoints(),
+        apiService.bonus.getActiveBonusOptions(),
       ])
       setUsers(usersData)
       setGoals(goalsData)
       setEvents(eventsData)
       setTeams(teamsData)
+      setUserBonusPoints(bonusPointsData)
+      setActiveBonusOptions(bonusOptionsData)
     } catch (err) {
       setError(err.message)
       console.error('Failed to load initial data:', err)
@@ -121,6 +126,29 @@ export const UserProvider = ({ children }) => {
       return {
         success: false,
         message: err.message || 'Failed to generate image',
+        type: 'error'
+      }
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  const generateBannerImage = async (userId, description) => {
+    setLoading(true)
+    setError(null)
+    try {
+      const updatedUser = await apiService.users.generateBannerImage(userId, description)
+      setUsers(prev => prev.map(user => user.id === userId ? updatedUser : user))
+      return {
+        success: true,
+        message: 'Banner image generated successfully!',
+        bannerImageUrl: updatedUser.bannerImageUrl
+      }
+    } catch (err) {
+      setError(err.message)
+      return {
+        success: false,
+        message: err.message || 'Failed to generate banner image',
         type: 'error'
       }
     } finally {
@@ -335,7 +363,7 @@ export const UserProvider = ({ children }) => {
     const userGoals = getUserGoals(userId)
     const user = users.find(u => u.id === userId)
     if (!user) return 0
-    return calculationService.calculateUserScore(user, userGoals, userEvents)
+    return calculationService.calculateUserScore(user, userGoals, userEvents, userBonusPoints)
   }
 
   const getTeamScore = (teamId) => {
@@ -345,7 +373,7 @@ export const UserProvider = ({ children }) => {
     const teamEvents = events.filter(event => 
       event.userId === team.userIdOne || event.userId === team.userIdTwo
     )
-    return calculationService.calculateTeamScore(team, goals, teamEvents)
+    return calculationService.calculateTeamScore(team, goals, teamEvents, userBonusPoints)
   }
 
   const canLogEventForGoal = (userId, goalId) => {
@@ -375,6 +403,47 @@ export const UserProvider = ({ children }) => {
     return todaysEvents.length === 0
   }
 
+  // Bonus operations
+  const getUserBonusPoints = (userId) => {
+    return userBonusPoints.filter(bonus => bonus.userId === userId)
+  }
+
+  const updateBonusPoints = async (userId, bonusId, newAmount) => {
+    setLoading(true)
+    setError(null)
+    try {
+      const bonusData = {
+        userId,
+        bonusId,
+        amount: newAmount
+      }
+      
+      const updatedBonus = await apiService.bonus.updateBonusPoints(bonusData)
+      
+      // Update local state
+      setUserBonusPoints(prev => {
+        const existingIndex = prev.findIndex(b => b.userId === userId && b.bonusId === bonusId)
+        if (existingIndex >= 0) {
+          // Update existing bonus
+          const newBonuses = [...prev]
+          newBonuses[existingIndex] = updatedBonus
+          return newBonuses
+        } else {
+          // Add new bonus
+          return [...prev, updatedBonus]
+        }
+      })
+      
+      return { success: true, message: 'Bonus points updated successfully!' }
+    } catch (err) {
+      setError(err.message)
+      console.error('Failed to update bonus points:', err)
+      return { success: false, message: err.message || 'Failed to update bonus points' }
+    } finally {
+      setLoading(false)
+    }
+  }
+
   return (
     <UserContext.Provider
       value={{
@@ -383,15 +452,17 @@ export const UserProvider = ({ children }) => {
         goals,
         events,
         teams,
+        userBonusPoints,
+        activeBonusOptions,
         loading,
         error,
-        isClient,
         
         // User operations
         addUser,
         updateUser,
         deleteUser,
         generateUserImage,
+        generateBannerImage,
         
         // Goal operations
         addGoal,
@@ -408,6 +479,10 @@ export const UserProvider = ({ children }) => {
         addTeam,
         updateTeam,
         deleteTeam,
+        
+        // Bonus operations
+        getUserBonusPoints,
+        updateBonusPoints,
         
         // Helper functions
         getUserGoals,

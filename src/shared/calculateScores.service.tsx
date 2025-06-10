@@ -1,4 +1,4 @@
-import { Event, Goal, Team, User } from "./classes.def";
+import { Event, Goal, Team, User, UserBonus } from "./classes.def";
 
 // Helper function to convert date to Utah time and get the date string
 const getUtahDateString = (dateTimeString: string): string => {
@@ -23,7 +23,7 @@ export const calculationService = {
         return goalEvents.length;
     },
 
-    calculateUserScore: (user: User, goals: Goal[], events: Event[]): number => {
+    calculateUserScore: (user: User, goals: Goal[], events: Event[], userBonusPoints: UserBonus[] = []): number => {
         //this one is a little more complex. for every day, if at least 4 events are logged then the user gets a bonus point
         //so every event is one point plus an extra for each day they have 4 events
         // Group events by date (converted to Utah time)
@@ -46,10 +46,15 @@ export const calculationService = {
             .filter(dayEvents => dayEvents.length >= 4)
             .length;
 
-        return baseScore + bonusPoints;
+        // Calculate bonus points from UserBonus (sum of all amounts)
+        const userBonusScore = userBonusPoints
+            .filter(bonus => bonus.userId === user.id)
+            .reduce((sum, bonus) => sum + bonus.amount, 0);
+
+        return baseScore + bonusPoints + userBonusScore;
     },
 
-    calculateTeamScore: (team: Team, goals: Goal[], events: Event[]): number => {
+    calculateTeamScore: (team: Team, goals: Goal[], events: Event[], userBonusPoints: UserBonus[] = []): number => {
         //the same logic applies for user scores but now if both team members get the bonus point for the day they also get another
         //bonus point for making sure both team members get all 4 log events
         // Group events by user and date (converted to Utah time)
@@ -91,6 +96,11 @@ export const calculationService = {
             }
         });
 
-        return totalScore;
+        // Add bonus points for both team members
+        const teamBonusScore = userBonusPoints
+            .filter(bonus => bonus.userId === team.userIdOne || bonus.userId === team.userIdTwo)
+            .reduce((sum, bonus) => sum + bonus.amount, 0);
+
+        return totalScore + teamBonusScore;
     }
 }

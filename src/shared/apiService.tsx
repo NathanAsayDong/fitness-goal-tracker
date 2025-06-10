@@ -1,4 +1,4 @@
-import { Event, EventClass, Goal, GoalClass, Team, TeamClass, User, UserClass } from './classes.def';
+import { Event, EventClass, Goal, GoalClass, Team, TeamClass, User, UserClass, Bonus, UserBonus, BonusClass, UserBonusClass } from './classes.def';
 
 // Configuration
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
@@ -72,6 +72,13 @@ export const userAPI = {
   // Generate user image
   generateUserImage: async (userId: string): Promise<User> => {
     return apiRequest<User>(`/images/generate-user-image/${userId}`, {
+      method: 'POST',
+    });
+  },
+
+  // Generate banner image
+  generateBannerImage: async (userId: string, description: string): Promise<User> => {
+    return apiRequest<User>(`/images/generate-banner-image/${userId}?description=${encodeURIComponent(description)}`, {
       method: 'POST',
     });
   },
@@ -213,12 +220,39 @@ export const teamAPI = {
   },
 };
 
+// Bonus API Service
+export const bonusAPI = {
+  // Get all bonus points
+  getAllBonusPoints: async (): Promise<UserBonus[]> => {
+    return apiRequest<UserBonus[]>('/bonus/bonus-points');
+  },
+
+  // Get bonus points for specific user
+  getUserBonusPoints: async (userId: string): Promise<UserBonus[]> => {
+    return apiRequest<UserBonus[]>(`/bonus/bonus-points/${userId}`);
+  },
+
+  // Get active bonus options
+  getActiveBonusOptions: async (): Promise<Bonus[]> => {
+    return apiRequest<Bonus[]>('/bonus/bonus-options');
+  },
+
+  // Update bonus points
+  updateBonusPoints: async (userBonus: UserBonus): Promise<UserBonus> => {
+    return apiRequest<UserBonus>('/bonus/bonus-points', {
+      method: 'PUT',
+      body: JSON.stringify(userBonus),
+    });
+  },
+};
+
 // Combined API service
 export const apiService = {
   users: userAPI,
   goals: goalAPI,
   events: eventAPI,
   teams: teamAPI,
+  bonus: bonusAPI,
 };
 
 // Error handling utilities
@@ -267,6 +301,23 @@ export const createTeam = (
   teamName: string
 ): TeamClass => {
   return new TeamClass(userIdOne, userIdTwo, teamName);
+};
+
+export const createUserBonus = (
+  userId: string,
+  bonusId: string,
+  amount: number
+): UserBonusClass => {
+  return new UserBonusClass(userId, bonusId, amount);
+};
+
+export const createBonus = (
+  name: string,
+  description: string,
+  isActive: boolean,
+  max: number
+): BonusClass => {
+  return new BonusClass(name, description, isActive, max);
 };
 
 export default apiService;

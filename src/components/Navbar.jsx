@@ -2,6 +2,7 @@
 
 import { Home, User } from "lucide-react"
 import Link from "next/link"
+import { useRouter } from "next/navigation"
 import { useState } from "react"
 import { useUserContext } from "../contexts/UserContext"
 import AddUserForm from "./AddUserForm"
@@ -10,6 +11,7 @@ const Navbar = () => {
   const [showAddUser, setShowAddUser] = useState(false)
   const [showUserSelection, setShowUserSelection] = useState(false)
   const { users } = useUserContext()
+  const router = useRouter()
 
   // Get cached user from localStorage
   const getCachedUser = () => {
@@ -25,7 +27,7 @@ const Navbar = () => {
     
     if (cachedUser) {
       // If we have a cached user, go directly to their profile
-      window.location.href = `/profile/${cachedUser.id}`
+      router.push(`/profile/${cachedUser.id}`)
     } else {
       // If no cached user, show user selection
       setShowUserSelection(true)
@@ -39,7 +41,7 @@ const Navbar = () => {
     }
     setShowUserSelection(false)
     // Navigate to profile
-    window.location.href = `/profile/${userId}`
+    router.push(`/profile/${userId}`)
   }
 
   return (

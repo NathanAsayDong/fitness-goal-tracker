@@ -1,13 +1,14 @@
 "use client"
 
-import { AlertTriangle, Check, CheckCircle, Clock, Edit3, ImageIcon, Plus, Target, Users, XCircle } from "lucide-react"
+import { AlertTriangle, Check, CheckCircle, Clock, Edit3, ImageIcon, Minus, Plus, Star, Target, Users, XCircle } from "lucide-react"
 import Link from "next/link"
-import { useParams } from "next/navigation"
+import { useParams, useRouter } from "next/navigation"
 import { useState } from "react"
 import { useUserContext } from "../contexts/UserContext"
 
 const ProfileView = () => {
   const params = useParams()
+  const router = useRouter()
   const userId = params.userId
   const { 
     users, 
@@ -19,6 +20,10 @@ const ProfileView = () => {
     addEvent,
     canLogEventForGoal,
     generateUserImage,
+    generateBannerImage,
+    activeBonusOptions,
+    getUserBonusPoints,
+    updateBonusPoints,
     loading,
     error 
   } = useUserContext()
@@ -27,10 +32,13 @@ const ProfileView = () => {
   const [showEditGoal, setShowEditGoal] = useState(false)
   const [showEventForm, setShowEventForm] = useState(false)
   const [showUserSelection, setShowUserSelection] = useState(false)
+  const [showBannerForm, setShowBannerForm] = useState(false)
   const [selectedGoalId, setSelectedGoalId] = useState("")
   const [editingGoalId, setEditingGoalId] = useState("")
   const [eventNote, setEventNote] = useState("")
+  const [bannerDescription, setBannerDescription] = useState("")
   const [generatingImage, setGeneratingImage] = useState(false)
+  const [generatingBanner, setGeneratingBanner] = useState(false)
   
   // Snackbar state
   const [snackbar, setSnackbar] = useState({
@@ -43,6 +51,7 @@ const ProfileView = () => {
   const userGoals = user ? getUserGoals(userId) : []
   const userEvents = user ? getUserEvents(userId) : []
   const userScore = user ? getUserScore(userId) : 0
+  const userBonusPoints = user ? getUserBonusPoints(userId) : []
 
   const [goalForm, setGoalForm] = useState({
     goalName: "",
@@ -84,8 +93,26 @@ const ProfileView = () => {
       localStorage.setItem('selectedUserId', newUserId)
     }
     setShowUserSelection(false)
-    // Navigate to the new user's profile
-    window.location.href = `/profile/${newUserId}`
+    // Navigate to the new user's profile using Next.js router
+    router.push(`/profile/${newUserId}`)
+  }
+
+  const handleBonusPointChange = async (bonusId, change) => {
+    const currentBonus = userBonusPoints.find(b => b.bonusId === bonusId)
+    const currentAmount = currentBonus ? currentBonus.amount : 0
+    const newAmount = Math.max(0, currentAmount + change) // Don't allow negative amounts
+    
+    try {
+      const result = await updateBonusPoints(userId, bonusId, newAmount)
+      if (result.success) {
+        showSnackbar(result.message, 'success')
+      } else {
+        showSnackbar(result.message, 'error')
+      }
+    } catch (err) {
+      console.error('Failed to update bonus points:', err)
+      showSnackbar('Failed to update bonus points. Please try again later.', 'error')
+    }
   }
 
   // Show loading state while data is being fetched
@@ -301,6 +328,36 @@ const ProfileView = () => {
     }
   }
 
+  const handleGenerateBanner = async (e) => {
+    e.preventDefault()
+    if (!user || !user.gamerTag) {
+      showSnackbar('User must have a gamerTag to generate a banner', 'warning')
+      return
+    }
+    
+    if (!bannerDescription.trim()) {
+      showSnackbar('Please provide a description for the banner', 'warning')
+      return
+    }
+    
+    setGeneratingBanner(true)
+    try {
+      const result = await generateBannerImage(userId, bannerDescription)
+      if (result.success) {
+        showSnackbar(result.message, 'success')
+        setBannerDescription("")
+        setShowBannerForm(false)
+      } else {
+        showSnackbar(result.message, result.type || 'error')
+      }
+    } catch (err) {
+      console.error('Failed to generate banner:', err)
+      showSnackbar('Failed to generate banner. Please try again later.', 'error')
+    } finally {
+      setGeneratingBanner(false)
+    }
+  }
+
   const goalTypeOptions = [
     { value: "diet", label: "Diet", emoji: "🥗", color: "bg-green-100 border-green-300" },
     { value: "exercise", label: "Exercise", emoji: "💪", color: "bg-blue-100 border-blue-300" },
@@ -334,6 +391,15 @@ const ProfileView = () => {
             >
               <ImageIcon size={16} className="mr-1" />
               {generatingImage ? 'Generating...' : 'Generate Image'}
+            </button>
+            <button
+              onClick={() => setShowBannerForm(true)}
+              disabled={!user?.gamerTag}
+              className="flex items-center px-3 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition text-sm disabled:opacity-50 disabled:cursor-not-allowed"
+              title={!user?.gamerTag ? "User must have a gamerTag to generate a banner" : "Generate AI banner"}
+            >
+              <ImageIcon size={16} className="mr-1" />
+              Generate Banner
             </button>
             <button
               onClick={() => setShowAddGoal(true)}
@@ -375,39 +441,54 @@ const ProfileView = () => {
       )}
 
       {/* User Profile Card */}
-      <div className="mx-4 bg-gradient-to-r from-blue-500 to-purple-600 text-white p-6 rounded-xl shadow-lg">
-        <div className="flex items-center space-x-4">
-          <div className="h-16 w-16 rounded-full bg-white bg-opacity-20 flex items-center justify-center text-2xl font-bold overflow-hidden">
-            {user.imageUrl ? (
-              <img 
-                src={user.imageUrl} 
-                alt={`${user.firstName} ${user.lastName}`}
-                className="h-full w-full object-cover rounded-full"
-                onError={(e) => {
-                  e.target.style.display = 'none'
-                  e.target.nextSibling.style.display = 'flex'
-                }}
-              />
-            ) : null}
-            <div className={`h-full w-full flex items-center justify-center text-2xl font-bold ${user.imageUrl ? 'hidden' : ''}`}>
-              {user.firstName.charAt(0)}{user.lastName.charAt(0)}
+      <div className="mx-4 bg-gradient-to-r from-blue-500 to-purple-600 text-white p-6 rounded-xl shadow-lg relative overflow-hidden">
+        {/* Banner Image Background */}
+        {user.bannerImageUrl && (
+          <div 
+            className="absolute inset-0 bg-cover bg-center bg-no-repeat opacity-30 rounded-xl"
+            style={{ 
+              backgroundImage: `url(${user.bannerImageUrl})`,
+              backgroundSize: 'cover',
+              backgroundPosition: 'center'
+            }}
+          />
+        )}
+        
+        {/* Content overlay */}
+        <div className="relative z-10">
+          <div className="flex items-center space-x-4">
+            <div className="h-16 w-16 rounded-full bg-white bg-opacity-20 flex items-center justify-center text-2xl font-bold overflow-hidden">
+              {user.imageUrl ? (
+                <img 
+                  src={user.imageUrl} 
+                  alt={`${user.firstName} ${user.lastName}`}
+                  className="h-full w-full object-cover rounded-full"
+                  onError={(e) => {
+                    e.target.style.display = 'none'
+                    e.target.nextSibling.style.display = 'flex'
+                  }}
+                />
+              ) : null}
+              <div className={`h-full w-full flex items-center justify-center text-2xl font-bold ${user.imageUrl ? 'hidden' : ''}`}>
+                {user.firstName.charAt(0)}{user.lastName.charAt(0)}
+              </div>
             </div>
-          </div>
-          <div className="flex-1">
-            <h1 className="text-xl font-bold">{user.firstName} {user.lastName}</h1>
-            <p className="text-blue-100">{user.gamerTag && `@${user.gamerTag}`}</p>
-            <div className="mt-2 flex items-center space-x-4">
-              <div className="text-center">
-                <div className="text-2xl font-bold">{userScore}</div>
-                <div className="text-xs text-blue-200">Score</div>
-              </div>
-              <div className="text-center">
-                <div className="text-2xl font-bold">{todaysEvents.length}</div>
-                <div className="text-xs text-blue-200">Today</div>
-              </div>
-              <div className="text-center">
-                <div className="text-2xl font-bold">{userGoals.length}</div>
-                <div className="text-xs text-blue-200">Goals</div>
+            <div className="flex-1">
+              <h1 className="text-xl font-bold">{user.firstName} {user.lastName}</h1>
+              <p className="text-blue-100">{user.gamerTag && `@${user.gamerTag}`}</p>
+              <div className="mt-2 flex items-center space-x-4">
+                <div className="text-center">
+                  <div className="text-2xl font-bold">{userScore}</div>
+                  <div className="text-xs text-blue-200">Score</div>
+                </div>
+                <div className="text-center">
+                  <div className="text-2xl font-bold">{todaysEvents.length}</div>
+                  <div className="text-xs text-blue-200">Today</div>
+                </div>
+                <div className="text-center">
+                  <div className="text-2xl font-bold">{userGoals.length}</div>
+                  <div className="text-xs text-blue-200">Goals</div>
+                </div>
               </div>
             </div>
           </div>
@@ -531,6 +612,69 @@ const ProfileView = () => {
                   </div>
                 )
               })}
+          </div>
+        )}
+      </div>
+
+      {/* Bonus Points Section */}
+      <div className="mx-4">
+        <h2 className="text-lg font-bold mb-3 flex items-center">
+          <Star className="mr-2 text-yellow-600" size={20} />
+          Bonus Points
+        </h2>
+        
+        {activeBonusOptions.length === 0 ? (
+          <div className="text-center py-6 bg-gray-50 rounded-lg">
+            <p className="text-gray-500">No bonus point options available.</p>
+          </div>
+        ) : (
+          <div className="space-y-3">
+            {activeBonusOptions.map((bonus) => {
+              const userBonus = userBonusPoints.find(b => b.bonusId === bonus.id)
+              const currentAmount = userBonus ? userBonus.amount : 0
+              const isMaxedOut = currentAmount >= bonus.max
+              
+              return (
+                <div key={bonus.id} className="bg-white border rounded-lg p-4 shadow-sm">
+                  <div className="flex items-center justify-between">
+                    <div className="flex-1">
+                      <h3 className="font-semibold text-gray-800">{bonus.name}</h3>
+                      <p className="text-sm text-gray-600">{bonus.description}</p>
+                      <p className="text-xs text-gray-500 mt-1">Max: {bonus.max} points</p>
+                    </div>
+                    <div className="flex items-center space-x-3">
+                      <div className="text-center">
+                        <div className="text-lg font-bold text-yellow-600">{currentAmount}</div>
+                        <div className="text-xs text-gray-500">points</div>
+                      </div>
+                      <div className="flex items-center space-x-2">
+                        <button
+                          onClick={() => handleBonusPointChange(bonus.id, -1)}
+                          disabled={currentAmount <= 0 || loading}
+                          className="w-8 h-8 rounded-full bg-red-500 text-white flex items-center justify-center hover:bg-red-600 transition disabled:opacity-50 disabled:cursor-not-allowed"
+                        >
+                          <Minus size={16} />
+                        </button>
+                        <button
+                          onClick={() => handleBonusPointChange(bonus.id, 1)}
+                          disabled={loading || isMaxedOut}
+                          className="w-8 h-8 rounded-full bg-green-500 text-white flex items-center justify-center hover:bg-green-600 transition disabled:opacity-50"
+                          title={isMaxedOut ? "Maximum points reached" : "Add point"}
+                        >
+                          <Plus size={16} />
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                  {isMaxedOut && (
+                    <div className="mt-2 text-xs text-green-600 flex items-center">
+                      <CheckCircle size={14} className="mr-1" />
+                      Maximum points reached
+                    </div>
+                  )}
+                </div>
+              )
+            })}
           </div>
         )}
       </div>
@@ -797,6 +941,58 @@ const ProfileView = () => {
                   Cancel
                 </button>
               </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Banner Generation Modal */}
+      {showBannerForm && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-lg shadow-lg w-full max-w-md">
+            <div className="p-6">
+              <h2 className="text-xl font-bold mb-4 flex items-center">
+                <ImageIcon className="mr-2" size={24} />
+                Generate Banner Image
+              </h2>
+              <form onSubmit={handleGenerateBanner} className="space-y-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Banner Description
+                  </label>
+                  <textarea
+                    required
+                    value={bannerDescription}
+                    onChange={(e) => setBannerDescription(e.target.value)}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+                    rows="4"
+                    placeholder="Describe the banner image you want to generate... (e.g., 'A motivational fitness banner with mountains and sunrise')"
+                    autoFocus
+                  />
+                  <p className="text-xs text-gray-500 mt-1">
+                    Be specific about colors, themes, objects, and mood you want in your banner.
+                  </p>
+                </div>
+                <div className="flex justify-end space-x-3 pt-4">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setShowBannerForm(false)
+                      setBannerDescription("")
+                    }}
+                    className="px-4 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    type="submit"
+                    disabled={generatingBanner || !bannerDescription.trim()}
+                    className="px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    {generatingBanner ? 'Generating...' : 'Generate Banner'}
+                  </button>
+                </div>
+              </form>
             </div>
           </div>
         </div>

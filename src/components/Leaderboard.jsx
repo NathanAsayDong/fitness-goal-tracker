@@ -2,6 +2,7 @@
 
 import { Crown, Plus, Trophy, User, Users } from "lucide-react"
 import { useState } from "react"
+import { motion, AnimatePresence } from "framer-motion"
 import { useUserContext } from "../contexts/UserContext"
 import AddTeamForm from "./AddTeamForm"
 import AddUserForm from "./AddUserForm"
@@ -157,37 +158,64 @@ const Leaderboard = () => {
             </div>
           ) : (
             <div className="space-y-3">
-              {usersWithScores.map((user, index) => {
-                // Determine styling based on rank
-                let cardStyle, rankColor, scoreColor, crownColor
-                if (index === 0) {
-                  cardStyle = 'border-yellow-300 bg-gradient-to-r from-yellow-50 to-amber-50'
-                  rankColor = 'text-yellow-600'
-                  scoreColor = 'text-yellow-600'
-                  crownColor = 'text-yellow-500'
-                } else if (index === 1) {
-                  cardStyle = 'border-gray-400 bg-gradient-to-r from-gray-50 to-slate-50'
-                  rankColor = 'text-gray-600'
-                  scoreColor = 'text-gray-600'
-                  crownColor = 'text-gray-500'
-                } else if (index === 2) {
-                  cardStyle = 'border-amber-600 bg-gradient-to-r from-amber-50 to-orange-50'
-                  rankColor = 'text-amber-700'
-                  scoreColor = 'text-amber-700'
-                  crownColor = 'text-amber-600'
-                } else {
-                  cardStyle = 'border-gray-200'
-                  rankColor = 'text-gray-600'
-                  scoreColor = 'text-blue-600'
-                  crownColor = ''
-                }
-                
-                return (
-                <div
-                  key={user.id}
-                  className={`bg-white rounded-lg shadow-md border-2 transition-all hover:shadow-lg ${cardStyle}`}
-                >
-                  <div className="p-4">
+              <AnimatePresence>
+                {usersWithScores.map((user, index) => {
+                  // Determine styling based on rank
+                  let cardStyle, rankColor, scoreColor, crownColor
+                  if (index === 0) {
+                    cardStyle = 'border-yellow-300 bg-gradient-to-r from-yellow-50 to-amber-50'
+                    rankColor = 'text-yellow-600'
+                    scoreColor = 'text-yellow-600'
+                    crownColor = 'text-yellow-500'
+                  } else if (index === 1) {
+                    cardStyle = 'border-gray-400 bg-gradient-to-r from-gray-50 to-slate-50'
+                    rankColor = 'text-gray-600'
+                    scoreColor = 'text-gray-600'
+                    crownColor = 'text-gray-500'
+                  } else if (index === 2) {
+                    cardStyle = 'border-amber-600 bg-gradient-to-r from-amber-50 to-orange-50'
+                    rankColor = 'text-amber-700'
+                    scoreColor = 'text-amber-700'
+                    crownColor = 'text-amber-600'
+                  } else {
+                    cardStyle = 'border-gray-200'
+                    rankColor = 'text-gray-600'
+                    scoreColor = 'text-blue-600'
+                    crownColor = ''
+                  }
+                  
+                  return (
+                  <motion.div
+                    key={user.id}
+                    layout
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: -20 }}
+                    transition={{
+                      layout: {
+                        type: "spring",
+                        stiffness: 300,
+                        damping: 30
+                      },
+                      opacity: { duration: 0.2 },
+                      y: { duration: 0.2 }
+                    }}
+                    className={`bg-white rounded-lg shadow-md border-2 transition-all hover:shadow-lg ${cardStyle} relative overflow-hidden`}
+                  >
+                  {/* Banner Image Background */}
+                  {user.bannerImageUrl && (
+                    <div 
+                      className="absolute inset-0 bg-cover bg-center bg-no-repeat opacity-20 rounded-lg"
+                      style={{ 
+                        backgroundImage: `url(${user.bannerImageUrl})`,
+                        backgroundSize: 'cover',
+                        backgroundPosition: 'center'
+                      }}
+                    />
+                  )}
+                  
+                  {/* Content overlay */}
+                  <div className="relative z-10 p-4 bg-white bg-opacity-90 rounded-lg">
                     <div className="flex items-center justify-between">
                       {/* Rank and Avatar */}
                       <div className="flex items-center space-x-3">
@@ -243,9 +271,10 @@ const Leaderboard = () => {
                       </div>
                     </div>
                   </div>
-                </div>
+                </motion.div>
                 )
               })}
+              </AnimatePresence>
             </div>
           )}
         </div>
@@ -269,40 +298,67 @@ const Leaderboard = () => {
             </div>
           ) : (
             <div className="space-y-3">
-              {teamsWithScores.map((team, index) => {
-                const userOne = users.find(u => u.id === team.userIdOne)
-                const userTwo = users.find(u => u.id === team.userIdTwo)
-                
-                // Determine styling based on rank
-                let cardStyle, rankColor, scoreColor, crownColor
-                if (index === 0) {
-                  cardStyle = 'border-yellow-300 bg-gradient-to-r from-yellow-50 to-amber-50'
-                  rankColor = 'text-yellow-600'
-                  scoreColor = 'text-yellow-600'
-                  crownColor = 'text-yellow-500'
-                } else if (index === 1) {
-                  cardStyle = 'border-gray-400 bg-gradient-to-r from-gray-50 to-slate-50'
-                  rankColor = 'text-gray-600'
-                  scoreColor = 'text-gray-600'
-                  crownColor = 'text-gray-500'
-                } else if (index === 2) {
-                  cardStyle = 'border-amber-600 bg-gradient-to-r from-amber-50 to-orange-50'
-                  rankColor = 'text-amber-700'
-                  scoreColor = 'text-amber-700'
-                  crownColor = 'text-amber-600'
-                } else {
-                  cardStyle = 'border-gray-200'
-                  rankColor = 'text-gray-600'
-                  scoreColor = 'text-green-600'
-                  crownColor = ''
-                }
-                
-                return (
-                  <div
-                    key={team.id}
-                    className={`bg-white rounded-lg shadow-md border-2 transition-all hover:shadow-lg ${cardStyle}`}
-                  >
-                    <div className="p-4">
+              <AnimatePresence>
+                {teamsWithScores.map((team, index) => {
+                  const userOne = users.find(u => u.id === team.userIdOne)
+                  const userTwo = users.find(u => u.id === team.userIdTwo)
+                  
+                  // Determine styling based on rank
+                  let cardStyle, rankColor, scoreColor, crownColor
+                  if (index === 0) {
+                    cardStyle = 'border-yellow-300 bg-gradient-to-r from-yellow-50 to-amber-50'
+                    rankColor = 'text-yellow-600'
+                    scoreColor = 'text-yellow-600'
+                    crownColor = 'text-yellow-500'
+                  } else if (index === 1) {
+                    cardStyle = 'border-gray-400 bg-gradient-to-r from-gray-50 to-slate-50'
+                    rankColor = 'text-gray-600'
+                    scoreColor = 'text-gray-600'
+                    crownColor = 'text-gray-500'
+                  } else if (index === 2) {
+                    cardStyle = 'border-amber-600 bg-gradient-to-r from-amber-50 to-orange-50'
+                    rankColor = 'text-amber-700'
+                    scoreColor = 'text-amber-700'
+                    crownColor = 'text-amber-600'
+                  } else {
+                    cardStyle = 'border-gray-200'
+                    rankColor = 'text-gray-600'
+                    scoreColor = 'text-green-600'
+                    crownColor = ''
+                  }
+                  
+                  return (
+                    <motion.div
+                      key={team.id}
+                      layout
+                      initial={{ opacity: 0, y: 20 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      exit={{ opacity: 0, y: -20 }}
+                      transition={{
+                        layout: {
+                          type: "spring",
+                          stiffness: 300,
+                          damping: 30
+                        },
+                        opacity: { duration: 0.2 },
+                        y: { duration: 0.2 }
+                      }}
+                      className={`bg-white rounded-lg shadow-md border-2 transition-all hover:shadow-lg ${cardStyle} relative overflow-hidden`}
+                    >
+                    {/* Banner Image Background */}
+                    {(userOne?.bannerImageUrl || userTwo?.bannerImageUrl) && (
+                      <div 
+                        className="absolute inset-0 bg-cover bg-center bg-no-repeat opacity-20 rounded-lg"
+                        style={{ 
+                          backgroundImage: `url(${userOne?.bannerImageUrl || userTwo?.bannerImageUrl})`,
+                          backgroundSize: 'cover',
+                          backgroundPosition: 'center'
+                        }}
+                      />
+                    )}
+                    
+                    {/* Content overlay */}
+                    <div className="relative z-10 p-4 bg-white bg-opacity-90 rounded-lg">
                       <div className="flex items-center justify-between mb-3">
                         {/* Rank and Team Name */}
                         <div className="flex items-center space-x-3">
@@ -382,9 +438,10 @@ const Leaderboard = () => {
                         )}
                       </div>
                     </div>
-                  </div>
+                  </motion.div>
                 )
               })}
+              </AnimatePresence>
             </div>
           )}
         </div>
