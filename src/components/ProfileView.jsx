@@ -550,14 +550,10 @@ const ProfileView = () => {
                   <div className="flex justify-center">
                     <button
                       onClick={() => handleMarkComplete(goal.id)}
-                      disabled={hasCompletedToday}
-                      className={`px-4 py-2 rounded-lg font-medium transition ${
-                        hasCompletedToday
-                          ? 'bg-gray-200 text-gray-500 cursor-not-allowed'
-                          : 'bg-green-600 text-white hover:bg-green-700 cursor-pointer'
-                      }`}
+                      disabled={true}
+                      className="px-4 py-2 rounded-lg font-medium transition bg-gray-200 text-gray-500 cursor-not-allowed"
                     >
-                      {hasCompletedToday ? '✓ Completed Today' : 'Log Today'}
+                      Competition Ended
                     </button>
                   </div>
                 </div>
@@ -649,16 +645,16 @@ const ProfileView = () => {
                       <div className="flex items-center space-x-2">
                         <button
                           onClick={() => handleBonusPointChange(bonus.id, -1)}
-                          disabled={currentAmount <= 0 || loading}
-                          className="w-8 h-8 rounded-full bg-red-500 text-white flex items-center justify-center hover:bg-red-600 transition disabled:opacity-50 disabled:cursor-not-allowed"
+                          disabled={true}
+                          className="w-8 h-8 rounded-full bg-gray-400 text-white flex items-center justify-center disabled:opacity-50 disabled:cursor-not-allowed"
                         >
                           <Minus size={16} />
                         </button>
                         <button
                           onClick={() => handleBonusPointChange(bonus.id, 1)}
-                          disabled={loading || isMaxedOut}
-                          className="w-8 h-8 rounded-full bg-green-500 text-white flex items-center justify-center hover:bg-green-600 transition disabled:opacity-50"
-                          title={isMaxedOut ? "Maximum points reached" : "Add point"}
+                          disabled={true}
+                          className="w-8 h-8 rounded-full bg-gray-400 text-white flex items-center justify-center disabled:opacity-50 disabled:cursor-not-allowed"
+                          title="Competition ended"
                         >
                           <Plus size={16} />
                         </button>

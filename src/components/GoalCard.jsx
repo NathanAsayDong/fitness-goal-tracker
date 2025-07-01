@@ -106,9 +106,10 @@ const GoalCard = ({ userId, category, title, icon, goal, color, progressColor })
 
           <button
             onClick={handleIncrement}
-            className="w-full py-2 bg-white border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+            disabled={true}
+            className="w-full py-2 bg-gray-200 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-500 cursor-not-allowed"
           >
-            Complete Today
+            Competition Ended
           </button>
         </>
       )}
