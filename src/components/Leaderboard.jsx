@@ -231,7 +231,7 @@ const Leaderboard = () => {
 
       {/* Users View */}
       {viewMode === "users" && (
-        <div className="mx-4 relative z-10">
+        <div className="relative z-10">
           {users.length === 0 ? (
             <div className="text-center py-12 bg-gray-50 rounded-lg border-2 border-dashed border-gray-300">
               <Trophy className="mx-auto text-gray-400 mb-4" size={48} />
@@ -383,7 +383,7 @@ const Leaderboard = () => {
 
       {/* Teams View */}
       {viewMode === "teams" && (
-        <div className="mx-4 relative z-10">
+        <div className="relative z-10">
           {(!teams || teams.length === 0) ? (
             <div className="text-center py-12 bg-gray-50 rounded-lg border-2 border-dashed border-gray-300">
               <Users className="mx-auto text-gray-400 mb-4" size={48} />
